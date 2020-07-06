@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apps-frontend
+spec:
+  selector:
+    app: apps-frontend
+  ports:
+    - port: 4200
+      targetPort: 80
+      nodePort: 30001
+  type: LoadBalancer
+  externalIPs:
+  - 172.17.61.90
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apps-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apps-frontend
+  template:
+    metadata:
+      labels:
+        app: apps-frontend
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: apps-frontend
+        image: douniahm/apps-kpis:frontend
+        ports:
+          - containerPort: 80
+        imagePullPolicy: IfNotPresent

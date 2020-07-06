@@ -1,0 +1,30 @@
+version: "3"
+services:
+
+  postgres_db:
+    image: douniahm/apps-kpis:postgres_db
+    container_name: postgres_db
+    networks:
+      - apps-kpis
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=postgres_db
+      - POSTGRES_ROOT_PASSWORD=admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+    restart: always
+
+  apps-backend:
+    depends_on:
+      - postgres_db
+    image:  douniahm/apps-kpis:backend
+    container_name: apps-backend
+    networks:
+      - apps-kpis
+    ports:
+      - "8080:8080"
+    restart: always
+
+networks:
+  apps-kpis: 

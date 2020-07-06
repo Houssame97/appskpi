@@ -1,0 +1,14 @@
+:host ::ng-deep .ui-table {
+  font-size: 14px;
+}
+
+:host ::ng-deep .ui-table .ui-table-tbody > tr > td, :host ::ng-deep .ui-table .ui-table-thead > tr > th{
+  border: 0 none;
+}
+
+:host ::ng-deep .ui-table-caption {
+  border: 0 none;
+  padding: 12px;
+  text-align: left;
+  font-size: 20px;
+}

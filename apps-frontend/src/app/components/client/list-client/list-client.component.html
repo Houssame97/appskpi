@@ -1,0 +1,107 @@
+<!-- Listing Table-->
+<p-table #dt [columns]="cols" [value]="clients" selectionMode="multiple" [(selection)]="selectedClients" [paginator]="true" [rows]="10"
+[responsive]="true" dataKey="idClient" [resizableColumns]="true" [autoLayout]="true"
+[rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true" totalRecords="{{totalRecords}}"
+currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+  <ng-template pTemplate="caption" >
+    <div class="d-flex justify-content-between">
+      <div>Liste des Clients</div>
+      <div class="d-flex justify-content-around ">
+        <div class="input-group input-group-sm mb-3" style="width: fit-content;">
+          <div class="input-group-prepend">
+            <span class="input-group-text"><i class="pi pi-search"></i></span>
+          </div>
+          <input pInputText type="text" class="form-control" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Global Search" aria-describedby="basic-addon1">
+        </div>
+        &nbsp;
+        <div>
+        <button type="button" class="btn btn-success btn-sm" (click)="dt.exportCSV({selectionOnly:true})">
+          <i class="pi pi-file-excel"></i>Exporter</button>
+        </div>
+        &nbsp;
+        <div>
+          <button type="button" class="btn btn-primary btn-sm" (click)="showAddingDialogPosition()"><i class="pi pi-plus"></i>Ajouter</button>
+        </div>
+    </div>
+    </div>
+  </ng-template>
+    <ng-template pTemplate="header" let-columns>
+        <tr style="text-align: left;">
+          <!--<th></th>-->
+          <th pSortableColumn="idClient"><p-tableHeaderCheckbox></p-tableHeaderCheckbox> &nbsp;IdClient <p-sortIcon field="idClient"></p-sortIcon></th>
+          <th pSortableColumn="nomClient">Nom <p-sortIcon field="nomClient"></p-sortIcon></th>
+          <th pSortableColumn="industrie.nomIndustrie">Industrie <p-sortIcon field="industrie.nomIndustrie"></p-sortIcon></th>
+          <th style="width:8em"></th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-ri="rowIndex" >
+        <tr class="ui-selectable-row">
+          <!-- <td></td>-->
+          <td><p-tableCheckbox [value]="rowData"></p-tableCheckbox> &nbsp;{{rowData?.idClient}}</td>
+          <td>{{rowData?.nomClient}}</td>
+          <td>{{rowData?.industrie?.nomIndustrie}}</td>
+          <td>Date: {{rowData?.audit?.updatedOn | date}} <br> Par: {{rowData?.audit?.updatedBy}}</td>
+          <td style="text-align:center">
+            <button type="button" class="btn btn-outline-primary btn-sm" (click)="showDetailsDialogPosition(rowData)"><i class="pi pi-search"></i></button>
+            &nbsp;
+            <button type="button" class="btn btn-outline-primary btn-sm" (click)="showAddingDialogPosition(rowData)"><i class="pi pi-pencil"></i></button>
+        </td>
+          </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+          <td colspan="8" style="text-align:left">No data found.</td>
+      </tr>
+  </ng-template>
+</p-table>
+<!--Clients Details Modal-->
+<p-dialog header="&#9776; {{selectedClient?.nomClient|uppercase}}"
+[(visible)]="displayPosition" [position]="position" [modal]="true" [style]="{width: '70vw'}" [maximizable]="true" [baseZIndex]="10000"
+[draggable]="false" [resizable]="false">
+
+      <div class="d-flex justify-content-between">
+        <div>A9{{selectedClient?.idClient}}cd</div>
+        <div><h4><span class="badge badge-danger">{{selectedClient?.industrie?.nomIndustrie}}</span></h4></div>
+      </div>
+      <hr>
+      <p-footer>
+            <!--<button type="button" pButton icon="pi pi-check" (click)="displayPosition=false" label="Yes"></button>
+            <button type="button" pButton icon="pi pi-times" (click)="displayPosition=false" label="No" class="ui-button-secondary"></button>-->
+        </p-footer>
+</p-dialog>
+<!-- Adding and editing Clients modal-->
+<p-dialog header="Nouvelle Client" [(visible)]="displayAddingPosition" [style]="{width: '50vw'}" [baseZIndex]="10000" [closable]="false"
+[draggable]="false">
+  <form [formGroup]="AddingForm" (ngSubmit)="onSubmitAdding()" >
+    <div class="row">
+      <div class="col form-group input-group-sm mb-3">
+        <label class="control-label">Nom :</label>
+        <input type="text" class="form-control" [(ngModel)]="newClient.nomClient" required formControlName="nomClient">
+      </div>
+    </div>
+    <div class="form-group input-group-sm mb-3">
+      <label class="control-label">IdClient :</label>
+      <input type="text" class="form-control" [(ngModel)]="newClient.idClient" required formControlName="idClient">
+    </div>
+    <div class="form-group input-group-sm mb-3">
+      <label class="control-label">Industrie :</label> &nbsp;
+      <select class="form-control" id="industrie" formControlName="industrie" [(ngModel)]="idNewClientIndustrie">
+        <option *ngFor="let industrie of industries" [value]="industrie.idIndustrie">{{industrie?.nomIndustrie}}</option>
+      </select>
+    </div>
+    <div *ngIf="(isEdditing && (AddingForm.controls['nomClient'].touched||AddingForm.controls['industrie'].touched
+     || AddingForm.controls['idClient'].touched )
+      && AddingForm.invalid)"
+      class="alert-danger">
+        Tous les champs sont requis <br>
+    </div><br>
+    <!--IdClient validation-->
+    <div *ngIf="invalidIdClient" class="alert-danger">
+      IdClient existe
+    </div>
+  </form>
+  <p-footer>
+      <button [disabled]="AddingForm.invalid" type="submit" class="btn btn-primary btn-sm" (click)="onSubmitAdding()">Sauvegarder</button>
+      <button type="button" (click)="resetData()"  class="btn btn-secondary btn-sm">Annuler</button>
+  </p-footer>
+</p-dialog>

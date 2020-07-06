@@ -1,0 +1,138 @@
+<p-table #dt [columns]="cols" [value]="certified" selectionMode="multiple" [(selection)]="selectedCertified" [paginator]="true" [rows]="10"
+editMode="row" [responsive]="true" dataKey="idRessource_Certification" [resizableColumns]="true" [autoLayout]="true"
+[rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true" totalRecords="{{totalRecords}}"
+currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" >
+<ng-template pTemplate="caption" >
+  <div class="d-flex justify-content-between">
+    <div>Liste des certifiés</div>
+    <div class="d-flex justify-content-around ">
+      <div class="input-group input-group-sm mb-3" style="width: fit-content;">
+        <div class="input-group-prepend">
+          <span class="input-group-text" ><i class="pi pi-search"></i></span>
+        </div>
+        <input pInputText type="text" class="form-control" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Global Search" aria-describedby="basic-addon1">
+      </div>
+      &nbsp;
+      <div class="input-group input-group-sm mb-3">
+        <button type="button" class="btn btn-success btn-sm" (click)="dt.exportCSV({selectionOnly:true})">
+          <i class="pi pi-file-excel"></i>Exporter</button>&nbsp;
+          <button type="button" class="btn btn-primary btn-sm"  data-toggle="collapse" data-target="#collapseAdding" aria-expanded="false" aria-controls="collapseAdding"><i class="pi pi-plus"></i>Nouveau</button>
+      </div>
+  </div>
+  </div>
+  <div class="collapse" id="collapseAdding">
+    <div class="card card-body">
+      <form class="form-inline" [formGroup]="AddingForm" (ngSubmit)="onSubmitAdding()">
+        <div class="form-group input-group-sm mb-3">
+          <label class="control-label">Ressource certifiée:</label> &nbsp;
+          <select class="form-control" id="ressource" formControlName="ressource" [(ngModel)]="idRessourceCertified">
+            <option *ngFor="let ressource of ressources" [value]="ressource.idRessource">{{ressource?.nomRessource}} {{ressource?.prenomRessource}}</option>
+          </select>
+        </div> &nbsp;
+        <div class="form-group input-group-sm mb-3">
+          <label class="control-label">Niveau de maîtrise :</label>
+          <input type="number" class="form-control" max="5" min="1" [(ngModel)]="newCertified.niveau_de_maitrise" required formControlName="niveau_de_maitrise" placeholder="1 à 5">
+        </div> &nbsp;
+        <div class="form-group input-group-sm mb-3">
+          <label class="control-label">Lieu d'obtenion :</label> &nbsp;
+          <select id="lieu_obtention" class="form-control" formControlName="lieu_obtention" [(ngModel)]="newCertified.obtenue_a_dxc">
+            <option [value]="true">A DXC</option>
+            <option [value]="false">Ailleurs</option>
+          </select>
+        </div> &nbsp;
+        <div class="form-group input-group-sm mb-3">
+          <label class="control-label">Année d'obtention :</label>
+          <input type="number" class="form-control" max="3000" min="1800" value="2020" [(ngModel)]="newCertified.annee_obtention" required formControlName="annee_obtention">
+        </div> &nbsp;&nbsp;&nbsp;
+        <div class="form-group input-group-sm mb-3">
+          <button [disabled]="AddingForm.invalid" type="submit" class="btn btn-primary btn-sm">Ajouter</button>&nbsp;
+          <button type="button" class="btn btn-secondary btn-sm" (click)="this.isAdding=false" data-toggle="collapse" data-target="#collapseAdding" aria-expanded="false" aria-controls="collapseAdding" >Annuler</button>
+        </div><br/>
+        <div *ngIf="((AddingForm.controls['ressource'].touched || AddingForm.controls['annee_obtention'].touched ||
+         AddingForm.controls['niveau_de_maitrise'].touched || AddingForm.controls['lieu_obtention'].touched)
+          && AddingForm.invalid)"
+          class="alert-danger">
+            Tous les champs requis <br>
+        </div><br>
+        <div *ngIf="((AddingForm.controls['niveau_de_maitrise'].touched && AddingForm.controls['niveau_de_maitrise'].invalid))"
+          class="alert-danger">
+            Niveau de maîtrise entre 1 et 5
+        </div>
+      </form>
+    </div>
+  </div>
+</ng-template>
+    <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th style="width: 60px;"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+          <th pSortableColumn="ressource.nomRessource">Certifié <p-sortIcon field="ressource.nomRessource"></p-sortIcon></th>
+          <th pSortableColumn="niveau_de_maitrise">Niveau de maîtrise <p-sortIcon field="niveau_de_maitrise"></p-sortIcon></th>
+          <th pSortableColumn="annee_obtention">Année d'obtention <p-sortIcon field="annee_obtention"></p-sortIcon></th>
+          <th pSortableColumn="obtenue_a_dxc">Obtenue à DXC <p-sortIcon field="obtenue_a_dxc"></p-sortIcon></th>
+          <th pSortableColumn="audit.updatedOn">Dernière modification <p-sortIcon field="audit.updatedOn"></p-sortIcon></th>
+          <th style="width:8em"></th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-editing="editing" let-ri="rowIndex" let-expanded="expanded">
+        <tr class="ui-selectable-row" [pEditableRow]="rowData">
+          <td style="width: 60px;">
+            <p-tableCheckbox [value]="rowData"></p-tableCheckbox>&nbsp;
+          </td>
+          <td>
+            {{rowData?.ressource?.nomRessource}} {{rowData?.ressource?.prenomRessource}}
+          </td>
+          <td>
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                  <div class="input-group input-group-sm mb-3">
+                    <input type="text" class="form-control" [(ngModel)]="rowData.niveau_de_maitrise" required>
+                  </div>
+              </ng-template>
+              <ng-template pTemplate="output">
+                  {{rowData?.niveau_de_maitrise}}
+              </ng-template>
+              </p-cellEditor>
+          </td>
+          <td>
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                  <div class="input-group input-group-sm mb-3">
+                    <input type="text" class="form-control" [(ngModel)]="rowData.annee_obtention" required>
+                  </div>
+              </ng-template>
+              <ng-template pTemplate="output">
+                  {{rowData?.annee_obtention}}
+              </ng-template>
+              </p-cellEditor>
+          </td>
+          <td>
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                  <div class="input-group input-group-sm mb-3">
+                    <select id="lieu_obtention" class="form-control" [(ngModel)]="rowData.obtenue_a_dxc">
+                      <option [value]="true" [selected]="rowData.obtenue_a_dxc">Oui</option>
+                      <option [value]="false" [selected]="!rowData.obtenue_a_dxc">Non</option>
+                    </select>
+                  </div>
+              </ng-template>
+              <ng-template pTemplate="output">
+                <div *ngIf="rowData.obtenue_a_dxc">Oui</div>
+                <div *ngIf="!rowData.obtenue_a_dxc">Non</div>
+              </ng-template>
+              </p-cellEditor>
+          </td>
+          <td>Date: {{rowData?.audit?.updatedOn}} <br> Par: {{rowData?.audit?.updatedBy}}</td>
+          <td style="text-align:center">
+            <button *ngIf="!editing" type="button" pInitEditableRow class="btn btn-primary btn-sm"><i class="pi pi-pencil"></i></button>
+            <button *ngIf="editing" type="button" pSaveEditableRow  (click)="onEditSave(rowData)"  class="btn btn-success btn-sm" style="margin-right: .5em" ><i class="pi pi-check"></i></button>
+            <button *ngIf="editing" type="button" pCancelEditableRow class="btn btn-secondary btn-sm"><i class="pi pi-times"></i></button>
+        </td>
+          </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+          <td colspan="8" style="text-align:left">No Certified found.</td>
+      </tr>
+  </ng-template>
+</p-table>
+<p-toast></p-toast>

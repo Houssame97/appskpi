@@ -1,0 +1,16 @@
+{
+  "extends": "../tslint.json",
+  "rules": {
+    "directive-selector": [
+      false,
+      "attribute",
+      "app"
+    ],
+    "component-selector": [
+      false,
+      "element",
+      "app"
+    ]
+  }
+}
+

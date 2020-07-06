@@ -1,0 +1,17 @@
+<div class="login-wrapper">
+    <div class="container spacer col-md-6 offset-md-3 col-sm-12 login-content">
+      <p class="title">Connexion</p>
+      <form class="login-form" [formGroup]="LoginForm" (ngSubmit)="onLogin()" >
+          <div *ngIf="isInvalidLogin" class="alert alert-danger" role="alert">
+            Une erreur s'est produite, réssayer!
+          </div>
+          <div class="col form-group input-group-sm">
+            <input type="text" class="form-control" placeholder="username" required formControlName="username">
+          </div>
+          <div class="col form-group input-group-sm mb-3">
+            <input type="password" class="form-control" placeholder="password" required formControlName="password">
+          </div>
+          <button [disabled]="LoginForm.invalid" type="submit" class="btn btn-warning">Sign in</button>
+      </form>
+    </div>
+</div>

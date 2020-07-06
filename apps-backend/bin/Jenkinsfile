@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+      stages {
+          stage('Check for changes') {
+            when {
+              anyOf {
+                changeset "**/apps-backend/**"
+                expression {
+                  return currentBuild.number == 1
+                }
+              }
+            }              
+	          stages{
+              stage('Build'){
+                steps{
+                  dir ('apps-backend'){
+                	  bat 'mvn package'
+           	      } 
+                }
+              }
+               stage('Unit Tests'){
+                steps{
+                  dir ('apps-backend'){
+                	  // bat 'mvn -Dtest=com.apps.unitTests."*" test -Dspring.profiles.active=test'
+                    echo "unit tests"
+                  }
+                }
+               }
+               stage('Integration Tests'){
+                steps{
+                  dir ('apps-backend'){
+                	  // bat 'mvn -Dtest=com.apps.integrationTests."*" test -Dspring.profiles.active=test'
+                    echo "integration tests"
+                  }
+                }
+               }
+              stage('Build docker image') {
+                steps{
+                  dir ('apps-backend'){
+                	  bat 'docker image build --no-cache --network=apps-kpis --rm -f Dockerfile -t douniahm/apps-kpis:backend .'
+                  }
+                }
+		          }
+	            stage('Deploy image To Registry') {
+                steps{
+                  /*bat 'docker-compose push douniahm/apps-kpis:backend'*/
+                  withDockerRegistry([url: "", credentialsId: "docker-hub-credentials"]) {
+                    bat 'docker push douniahm/apps-kpis:backend'
+                  }
+                }
+              }
+              stage('SonarQube analysis') {
+                steps{
+                  withSonarQubeEnv(credentialsId: "8b4c45f3-508f-46ef-989e-38a901bd60e4", installationName: 'SonarQube') { 
+                      dir ('apps-backend'){
+                          bat 'mvn sonar:sonar'
+                      }
+                  }
+                }
+              }
+               stage('Deploy to k8s cluster'){
+                steps{
+                  dir ('apps-backend'){
+                    kubernetesDeploy(
+                      kubeconfigId: 'kubeconfig',
+                      configs: 'backend-deployment.yml',
+                      enableConfigSubstitution: true
+                    )
+                  }
+		            }
+              }
+          }
+        }
+      }
+}

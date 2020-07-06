@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: PersistentVolume            # Create a PersistentVolume
+metadata:
+  name: postgres-apps-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard      # Storage class. A PV Claim requesting the same storageClass can be bound to this volume. 
+  capacity:
+    storage: 500Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:                       # hostPath PersistentVolume is used for development and testing. It uses a file/directory on the Node to emulate network-attached storage
+    path: "/mnt/data"
+  persistentVolumeReclaimPolicy: Delete  # Retain the PersistentVolume even after PersistentVolumeClaim is deleted. The volume is considered “released”. But it is not yet available for another claim because the previous claimant’s data remains on the volume. 
+---    
+apiVersion: v1
+kind: PersistentVolumeClaim        # Create a PersistentVolumeClaim to request a PersistentVolume storage
+metadata:                          # Claim name and labels
+  name: postgres-apps-pv-claim
+  labels:
+    app: postgres-db
+spec:                              # Access mode and resource limits
+  storageClassName: standard       # Request a certain storage class
+  accessModes:
+    - ReadWriteOnce                # ReadWriteOnce means the volume can be mounted as read-write by a single Node
+  resources:
+    requests:
+      storage: 500Mi
+---
+# type od service, Kubernetes assigns it the default type ClusterIP.
+# ClusterIP makes the Pod accessible from within the cluster, but not from outside 
+# this is fine because the only entity that has to access the MongoDB Pod is your app.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-db
+spec:
+  selector:
+    app: postgres-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-db
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+        - name: postgres-db
+          image: douniahm/apps-kpis:postgres_db
+          ports:
+            - containerPort: 5432
+          env:                        # Environment variables passed to the container 
+          - name: POSTGRES_ROOT_PASSWORD 
+            valueFrom:                # Read environment variables from kubernetes secrets
+              secretKeyRef:
+                name: postgres-root-password
+                key: password
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: postgres-db
+                key: database
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: postgres-user-password
+                key: username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres-user-password
+                key: password
+          volumeMounts:
+            - name: postgres-db
+              mountPath: /var/lib/postgres
+      volumes:
+        - name: postgres-db
+          persistentVolumeClaim:
+            claimName: postgres-apps-pv-claim

@@ -1,0 +1,89 @@
+<p-table #dt [columns]="cols" [value]="typesActivites" selectionMode="multiple" [(selection)]="selectedActivites" [paginator]="true" [rows]="10"
+editMode="row" [responsive]="true" dataKey="idTypeActivite" [resizableColumns]="true" [autoLayout]="true"
+[rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true" totalRecords="{{totalRecords}}"
+currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" >
+<ng-template pTemplate="caption" >
+  <div class="d-flex justify-content-between">
+    <div>Liste des Activités</div>
+    <div class="d-flex justify-content-around ">
+      <div class="input-group input-group-sm mb-3" style="width: fit-content;">
+        <div class="input-group-prepend">
+          <span class="input-group-text" ><i class="pi pi-search"></i></span>
+        </div>
+        <input pInputText type="text" class="form-control" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Global Search" aria-describedby="basic-addon1">
+      </div>
+      &nbsp;
+      <div>
+      <button type="button" class="btn btn-success btn-sm" (click)="dt.exportCSV({selectionOnly:true})">
+        <i class="pi pi-file-excel"></i>Exporter</button>
+      </div>
+      &nbsp;
+      <div>
+        <button type="button" class="btn btn-primary btn-sm"  data-toggle="collapse" data-target="#collapseAdding" aria-expanded="false" aria-controls="collapseAdding"><i class="pi pi-plus"></i>Nouveau</button>
+      </div>
+  </div>
+  </div>
+  <div class="collapse" id="collapseAdding">
+    <div class="card card-body">
+      <form class="form-inline" [formGroup]="AddingForm" (ngSubmit)="onSubmitAdding()">
+        <div class="form-group input-group-sm mb-3">
+          <input type="text" class="form-control" [(ngModel)]="newTypeActivite.nomTypeActivite" required formControlName="nomTypeActivite" placeholder="Type de l'activité">
+        </div> &nbsp;&nbsp;
+          <div class="form-group input-group-sm mb-3">
+            <button [disabled]="AddingForm.invalid" type="submit" class="btn btn-primary btn-sm">Ajouter</button>&nbsp;
+          <button type="button" class="btn btn-secondary btn-sm"  data-toggle="collapse" data-target="#collapseAdding" aria-expanded="false" aria-controls="collapseAdding">Annuler</button>
+          </div>
+        <div *ngIf="(AddingForm.controls['nomTypeActivite'].touched && AddingForm.invalid)"
+        class="alert-danger">
+          Champs requis
+      </div>
+      <!--Type Activite validation-->
+      <div *ngIf="invalidTypeActivite" class="alert-danger">
+        Type d'activité existe
+      </div>
+      </form>
+    </div>
+  </div>
+</ng-template>
+    <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th style="width: 60px;"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+          <th pSortableColumn="nomTypeActivite">Type d'activité <p-sortIcon field="nomTypeActivite"></p-sortIcon></th>
+          <th *ngIf="role == 'DSL'">Clients</th>
+          <th>Dernière modification</th>
+          <th style="width:8em"></th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-editing="editing" let-ri="rowIndex" let-expanded="expanded">
+        <tr class="ui-selectable-row" [pEditableRow]="rowData">
+          <td style="width: 60px;">
+            <p-tableCheckbox [value]="rowData"></p-tableCheckbox>&nbsp;
+          </td>
+          <td>
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <div class="input-group input-group-sm mb-3">
+                  <input type="text" class="form-control" [(ngModel)]="rowData.nomTypeActivite" required>
+                </div>
+             </ng-template>
+              <ng-template pTemplate="output" [pRowToggler]="rowData">
+                  {{rowData?.nomTypeActivite}}
+              </ng-template>
+              </p-cellEditor>
+          </td>
+          <td *ngIf="role == 'DSL'"><a routerLink="client">Voir la liste</a></td>
+          <td>Date: {{rowData.audit?.updatedOn | date}} <br> Par: {{rowData.audit?.updatedBy}}</td>
+          <td style="text-align:center">
+            <button *ngIf="!editing" type="button" pInitEditableRow class="btn btn-primary btn-sm"><i class="pi pi-pencil"></i></button>
+            <button *ngIf="editing" type="button" pSaveEditableRow  (click)="onEditSave(rowData)"  class="btn btn-success btn-sm" style="margin-right: .5em" ><i class="pi pi-check"></i></button>
+            <button *ngIf="editing" type="button" pCancelEditableRow class="btn btn-secondary btn-sm"><i class="pi pi-times"></i></button>
+        </td>
+          </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+          <td colspan="8" style="text-align:left">No Activities found.</td>
+      </tr>
+  </ng-template>
+</p-table>
+<p-toast></p-toast>

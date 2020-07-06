@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apps-backend
+spec:
+  selector:
+    app: apps-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30002
+  type: LoadBalancer
+  externalIPs:
+  - 172.17.61.90
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apps-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apps-backend
+  template:
+    metadata:
+      labels:
+        app: apps-backend
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: apps-backend
+        image: douniahm/apps-kpis:backend  
+        ports:
+          - containerPort: 8080
+        env:                        # Environment variables passed to the container 
+          - name: SPRING_DATASOURCE_PASSWORD
+            valueFrom:                # Read environment variables from kubernetes secrets
+              secretKeyRef:
+                name: postgres-root-password
+                key: password
+          - name: SPRING_DATASOURCE_URL
+            valueFrom:
+              secretKeyRef:
+                name: postgres-db
+                key: postgres-db-url
+          - name: SPRING_DATASOURCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: postgres-user-password
+                key: username
+        imagePullPolicy: IfNotPresent

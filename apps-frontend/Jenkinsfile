@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+      stages {
+          stage('Check for changes') {
+            when {
+              anyOf {
+                changeset "**/apps-frontend/**"
+                expression {
+                  return currentBuild.number == 1
+                }
+              }
+            }
+            stages{
+              stage('Build'){
+                steps{
+                  dir ('apps-frontend'){
+                    // bat 'npm install'
+                    // bat 'npm run ng build'
+                  }
+                }
+              }
+              stage('Build docker image') {
+                  steps{
+                    dir ('apps-frontend'){
+                      bat 'docker image build --network=apps-kpis --rm -f Dockerfile -t douniahm/apps-kpis:frontend .'
+                    }
+		              }
+                }
+	            stage('Deploy image To Registry') {
+                  steps{
+                    withDockerRegistry([url: "", credentialsId: "docker-hub-credentials"]) {
+                      bat 'docker push douniahm/apps-kpis:frontend'
+                    }
+		              }
+                }
+              stage('Deploy to k8s cluster'){
+                 steps{
+                    dir ('apps-frontend'){
+                      kubernetesDeploy(
+                        kubeconfigId: 'kubeconfig',
+                        configs: 'deployment.yml',
+                        enableConfigSubstitution: true
+                      )
+                    }
+		              }
+              }
+            }
+          }
+        }
+}

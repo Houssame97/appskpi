@@ -1,0 +1,125 @@
+<!-- Listing Table-->
+<p-table #dt [columns]="cols" [value]="contrats" selectionMode="multiple" [(selection)]="selectedContrats" [paginator]="true" [rows]="10"
+[responsive]="true" dataKey="idContrat" [resizableColumns]="true" [autoLayout]="true"
+[rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true" totalRecords="{{totalRecords}}"
+currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" >
+  <ng-template pTemplate="caption" >
+    <div class="d-flex justify-content-between">
+      <div>Liste des Contrats</div>
+      <div class="d-flex justify-content-around ">
+        <div class="input-group input-group-sm mb-3" style="width: fit-content;">
+          <div class="input-group-prepend">
+            <span class="input-group-text"><i class="pi pi-search"></i></span>
+          </div>
+          <input pInputText type="text" class="form-control" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Global Search" aria-describedby="basic-addon1">
+        </div>
+        &nbsp;
+        <div>
+        <button type="button" class="btn btn-success btn-sm" (click)="dt.exportCSV({selectionOnly:true})">
+          <i class="pi pi-file-excel"></i>Exporter</button>
+        </div>
+        &nbsp;
+        <div>
+          <button type="button" class="btn btn-primary btn-sm" (click)="showAddingDialogPosition()"><i class="pi pi-plus"></i>Ajouter</button>
+        </div>
+    </div>
+    </div>
+  </ng-template>
+    <ng-template pTemplate="header" let-columns>
+        <tr style="text-align: left;">
+          <!--<th></th>-->
+          <th pSortableColumn="idContrat"><p-tableHeaderCheckbox></p-tableHeaderCheckbox> &nbsp;IdContrat <p-sortIcon field="idContrat"></p-sortIcon></th>
+          <th pSortableColumn="descriptionContrat">Nom <p-sortIcon field="descriptionContrat"></p-sortIcon></th>
+          <th pSortableColumn="client.nomClient">Client <p-sortIcon field="client.nomClient"></p-sortIcon></th>
+          <th pSortableColumn="typeFacturation.nomFacturation">TypeFacturation <p-sortIcon field="typeFacturation.nomFacturation"></p-sortIcon></th>
+          <th pSortableColumn="typeActivite.nomActivite">TypeActivite <p-sortIcon field="typeActivite.nomActivite"></p-sortIcon></th>
+          <th style="width:8em"></th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-ri="rowIndex" >
+        <tr class="ui-selectable-row">
+          <!-- <td></td>-->
+          <td><p-tableCheckbox [value]="rowData"></p-tableCheckbox> &nbsp;{{rowData?.idContrat}}</td>
+          <td>{{rowData?.descriptionContrat}}</td>
+          <td>{{rowData?.client?.nomClient}}</td>
+          <td>{{rowData?.typeFacturation?.nomFacturation}}</td>
+          <td>{{rowData?.typeActivite?.nomActivite}}</td>
+          <td>Date: {{rowData?.audit?.updatedOn | date}} <br> Par: {{rowData?.audit?.updatedBy}}</td>
+          <td style="text-align:center">
+            <button type="button" class="btn btn-outline-primary btn-sm" (click)="showDetailsDialogPosition(rowData)"><i class="pi pi-search"></i></button>
+            &nbsp;
+            <button type="button" class="btn btn-outline-primary btn-sm" (click)="showAddingDialogPosition(rowData)"><i class="pi pi-pencil"></i></button>
+        </td>
+          </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+          <td colspan="8" style="text-align:left">No data found.</td>
+      </tr>
+  </ng-template>
+</p-table>
+<!--Contrats Details Modal-->
+<p-dialog header="&#9776; {{selectedContrat?.descriptionContrat|uppercase}}"
+[(visible)]="displayPosition" [position]="position" [modal]="true" [style]="{width: '70vw'}" [maximizable]="true" [baseZIndex]="10000"
+[draggable]="false" [resizable]="false">
+
+      <div class="d-flex justify-content-between">
+        <div>A9{{selectedContrat?.idContrat}}cd</div>
+        <div><h4><span class="badge badge-danger">{{selectedContrat?.client?.nomClient}}</span></h4></div>
+        <div><h4><span class="badge badge-danger">{{selectedContrat?.typeFacturation?.nomTypeFacturation}}</span></h4></div>
+        <div><h4><span class="badge badge-danger">{{selectedContrat?.typeActivite?.nomTypeActivite}}</span></h4></div>
+      </div>
+      <hr>
+      <p-footer>
+            <!--<button type="button" pButton icon="pi pi-check" (click)="displayPosition=false" label="Yes"></button>
+            <button type="button" pButton icon="pi pi-times" (click)="displayPosition=false" label="No" class="ui-button-secondary"></button>-->
+        </p-footer>
+</p-dialog>
+<!-- Adding and editing Contrats modal-->
+<p-dialog header="Nouvelle Contrat" [(visible)]="displayAddingPosition" [style]="{width: '50vw'}" [baseZIndex]="10000" [closable]="false"
+[draggable]="false">
+  <form [formGroup]="AddingForm" (ngSubmit)="onSubmitAdding()" >
+    <div class="row">
+      <div class="col form-group input-group-sm mb-3">
+        <label class="control-label">Nom :</label>
+        <input type="text" class="form-control" [(ngModel)]="newContrat.descriptionContrat" required formControlName="descriptionContrat">
+      </div>
+    </div>
+    <div class="form-group input-group-sm mb-3">
+      <label class="control-label">IdContrat :</label>
+      <input type="text" class="form-control" [(ngModel)]="newContrat.idContrat" required formControlName="idContrat">
+    </div>
+    <div class="form-group input-group-sm mb-3">
+      <label class="control-label">Client :</label> &nbsp;
+      <select class="form-control" id="client" formControlName="client" [(ngModel)]="idNewContratClient">
+        <option *ngFor="let client of clients" [value]="client.idClient">{{client?.nomClient}}</option>
+      </select>
+    </div>
+    <div class="form-group input-group-sm mb-3">
+      <label class="control-label">TypeFacturation:</label> &nbsp;
+      <select class="form-control" id="typeFacturation" formControlName="typeFacturation" [(ngModel)]="idNewContratTypeFacturation">
+        <option *ngFor="let typeFacturation of typesFacturations" [value]="typeFacturation.idTypeFacturation">{{typeFacturation?.nomTypeFacturation}}</option>
+      </select>
+    </div>
+    <div class="form-group input-group-sm mb-3">
+      <label class="control-label">TypeActivite:</label> &nbsp;
+      <select class="form-control" id="typeActivite" formControlName="typeActivite" [(ngModel)]="idNewContratTypeActivite">
+        <option *ngFor="let typeActivite of typesActivites" [value]="typeActivite.idTypeActivite">{{typeActivite?.nomTypeActivite}}</option>
+      </select>
+    </div>
+    <div *ngIf="(isEdditing && (AddingForm.controls['descriptionContrat'].touched || AddingForm.controls['client'].touched || AddingForm.controls['typeFacturation'].touched || AddingForm.controls['typeActivite'].touched
+     || AddingForm.controls['idContrat'].touched )
+      && AddingForm.invalid)"
+      class="alert-danger">
+        Tous les champs sont requis <br>
+    </div><br>
+    <!--IdContrat validation-->
+    <div *ngIf="invalidIdContrat" class="alert-danger">
+      IdContrat existe
+    </div>
+  </form>
+  <p-footer>
+      <button [disabled]="AddingForm.invalid" type="submit" class="btn btn-primary btn-sm" (click)="onSubmitAdding()">Sauvegarder</button>
+      <button type="button" (click)="resetData()"  class="btn btn-secondary btn-sm">Annuler</button>
+  </p-footer>
+</p-dialog>

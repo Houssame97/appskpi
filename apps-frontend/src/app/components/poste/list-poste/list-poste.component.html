@@ -1,0 +1,107 @@
+<p-table #dt [columns]="cols" [value]="postes" selectionMode="multiple" [(selection)]="selectedPostes" [paginator]="true" [rows]="10"
+editMode="row" [responsive]="true" dataKey="idPoste" [resizableColumns]="true" [autoLayout]="true"
+[rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true" totalRecords="{{totalRecords}}"
+currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" >
+<ng-template pTemplate="caption" >
+  <div class="d-flex justify-content-between">
+    <div>Liste des Postes</div>
+    <div class="d-flex justify-content-around ">
+      <div class="input-group input-group-sm mb-3" style="width: fit-content;">
+        <div class="input-group-prepend">
+          <span class="input-group-text" ><i class="pi pi-search"></i></span>
+        </div>
+        <input pInputText type="text" class="form-control" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Global Search" aria-describedby="basic-addon1">
+      </div>
+      &nbsp;
+      <div class="input-group input-group-sm mb-3">
+        <button type="button" class="btn btn-success btn-sm" (click)="dt.exportCSV({selectionOnly:true})">
+          <i class="pi pi-file-excel"></i>Exporter</button>&nbsp;
+          <button type="button" class="btn btn-primary btn-sm"  data-toggle="collapse" data-target="#collapseAdding" aria-expanded="false" aria-controls="collapseAdding"><i class="pi pi-plus"></i>Nouveau</button>
+      </div>
+  </div>
+  </div>
+  <div class="collapse" id="collapseAdding">
+    <div class="card card-body">
+      <form class="form-inline" [formGroup]="AddingForm" (ngSubmit)="onSubmitAdding()">
+        <div class="form-group input-group-sm mb-3">
+          <input type="text" class="form-control" [(ngModel)]="newPoste.nomPoste" required formControlName="nomPoste" placeholder="Intitulé du poste">
+        </div> &nbsp;
+        <div class="form-group input-group-sm mb-3">
+          <textarea class="form-control" [(ngModel)]="newPoste.descriptionPoste" required formControlName="descriptionPoste" placeholder="Description..." rows="1" cols="100"></textarea>
+        </div>&nbsp;&nbsp;&nbsp;
+        <div class="form-group input-group-sm mb-3">
+          <button [disabled]="AddingForm.invalid" type="submit" type="submit" class="btn btn-primary btn-sm">Ajouter</button>&nbsp;
+          <button type="button" class="btn btn-secondary btn-sm" (click)="this.isAdding=false" data-toggle="collapse" data-target="#collapseAdding" aria-expanded="false" aria-controls="collapseAdding">Annuler</button>
+        </div>
+        <div *ngIf="(AddingForm.controls['nomPoste'].touched && AddingForm.controls['nomPoste'].invalid)"
+          class="alert-danger">
+          <div *ngIf="AddingForm.controls['nomPoste'].errors.required"> Champs requis</div>
+          <div *ngIf="AddingForm.controls['nomPoste'].errors.minlength"> Minimum 3 caractères</div>
+        </div>
+        <div *ngIf="(AddingForm.controls['descriptionPoste'].touched && AddingForm.controls['descriptionPoste'].invalid)"
+        class="alert-danger">
+        <div *ngIf="AddingForm.controls['descriptionPoste'].errors.required"> Champs requis</div>
+      </div>
+       <!--Nom Poste validation-->
+       <div *ngIf="invalidNomPoste" class="alert-danger">
+        Poste existe
+      </div>
+      </form>
+    </div>
+  </div>
+</ng-template>
+    <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th style="width: 60px;"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+          <th pSortableColumn="nomPoste">Nom du Poste <p-sortIcon field="nomPoste"></p-sortIcon></th>
+          <th pSortableColumn="descriptionPoste">Description de la poste <p-sortIcon field="descriptionPoste"></p-sortIcon></th>
+          <th>Ressources</th>
+          <th>Dernière modification</th>
+          <th style="width:8em"></th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-editing="editing" let-ri="rowIndex" let-expanded="expanded">
+        <tr class="ui-selectable-row" [pEditableRow]="rowData">
+          <td style="width: 60px;">
+            <p-tableCheckbox [value]="rowData"></p-tableCheckbox>&nbsp;
+          </td>
+          <td>
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <div class="input-group input-group-sm mb-3">
+                  <input type="text" class="form-control" [(ngModel)]="rowData.nomPoste" required>
+                </div>
+             </ng-template>
+              <ng-template pTemplate="output" [pRowToggler]="rowData">
+                  {{rowData.nomPoste}}
+              </ng-template>
+              </p-cellEditor>
+          </td>
+          <td>
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                  <div class="input-group input-group-sm mb-3">
+                    <textarea type="text" class="form-control" [(ngModel)]="rowData.descriptionPoste" required></textarea>
+                  </div>
+              </ng-template>
+              <ng-template pTemplate="output">
+                  {{rowData.descriptionPoste}}
+              </ng-template>
+              </p-cellEditor>
+          </td>
+          <td><a routerLink="/poste/ressources/{{rowData.idPoste}}">Voir la liste</a></td>
+          <td>Date: {{rowData.audit?.updatedOn}} <br> Par: {{rowData.audit?.updatedBy}}</td>
+          <td style="text-align:center">
+            <button *ngIf="!editing" type="button" pInitEditableRow class="btn btn-primary btn-sm"><i class="pi pi-pencil"></i></button>
+            <button *ngIf="editing" type="button" pSaveEditableRow  (click)="onEditSave(rowData)"  class="btn btn-success btn-sm" style="margin-right: .5em" ><i class="pi pi-check"></i></button>
+            <button *ngIf="editing" type="button" pCancelEditableRow class="btn btn-secondary btn-sm"><i class="pi pi-times"></i></button>
+        </td>
+          </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+          <td colspan="8" style="text-align:left">No Postes found.</td>
+      </tr>
+  </ng-template>
+</p-table>
+<p-toast></p-toast>
